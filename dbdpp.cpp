@@ -213,21 +213,24 @@ private:
 	}
 
 public:
-	TableMetadata(std::vector<std::string> field_names, std::list<int> primary_key_indexes)
-		: field_count(static_cast<int>(field_names.size())), field_names(std::move(field_names)),
-		  primary_key_indexes(std::move(primary_key_indexes)) {
-		if (this->field_names.size() > std::numeric_limits<int>::max()) {
-			throw std::runtime_error("strangely too many columns in database");
-		}
-		for (int i = 0; i < field_count; ++i) {
-			all_indexes.push_back(i);
-		}
-		std::set_difference(
-			all_indexes.begin(), all_indexes.end(),
-			this->primary_key_indexes.begin(), this->primary_key_indexes.end(),
-			std::inserter(non_primary_key_indexes, non_primary_key_indexes.end())
-		);
-	}
+        TableMetadata(std::vector<std::string> field_names, std::list<int> primary_key_indexes)
+                : field_count(static_cast<int>(field_names.size())), field_names(std::move(field_names)),
+                  primary_key_indexes(std::move(primary_key_indexes)) {
+                if (this->field_names.size() > std::numeric_limits<int>::max()) {
+                        throw std::runtime_error("strangely too many columns in database");
+                }
+                for (int i = 0; i < field_count; ++i) {
+                        all_indexes.push_back(i);
+                }
+                std::set_difference(
+                        all_indexes.begin(), all_indexes.end(),
+                        this->primary_key_indexes.begin(), this->primary_key_indexes.end(),
+                        std::inserter(non_primary_key_indexes, non_primary_key_indexes.end())
+                );
+                if (this->primary_key_indexes.empty()) {
+                        throw std::runtime_error("table must define a primary key");
+                }
+        }
 
 	bool operator!=(const TableMetadata& that) const {
 		return field_names != that.field_names || primary_key_indexes != that.primary_key_indexes;
@@ -454,11 +457,12 @@ void compute_table_diff_on_db(Connection& conn, const TableMetadata& metadata, c
 }
 
 int main(int argc, char** argv) {
-	if (argc < 4 || argc > 5) {
-		std::cerr << "USAGE: dbdpp [ source.cnf ] target.cnf source_table_name target_table_name\n"
-			<< "\t(source.cnf and target.cnf should be MySQL-style configuration files)" << std::endl;
-		return 1;
-	}
+        if (argc < 4 || argc > 5) {
+                std::cerr << "USAGE: dbdpp [ source.cnf ] target.cnf source_table_name target_table_name\n"
+                        << "\t(source.cnf and target.cnf should be MySQL-style configuration files)\n"
+                        << "\t(tables must define a primary key)" << std::endl;
+                return 1;
+        }
 
 	try {
 		Config source = ConfigParser(argv[1]).parse_config();
