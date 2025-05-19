@@ -12,8 +12,10 @@ It serves as a faster and simpler replacement for [DBDiff](https://github.com/DB
 Running the program with no arguments will print its syntax:
 ```
 USAGE: dbdpp [ source.cnf ] target.cnf source_table_name target_table_name
-	(source.cnf and target.cnf should be MySQL-style configuration files)
+        (source.cnf and target.cnf should be MySQL-style configuration files)
 ```
+
+All tables processed by **dbdpp** must define a primary key.
 
 ### Example
 
@@ -42,6 +44,7 @@ will print into **out.sql** list of SQL statements which should be applied to
 _db_to_change.target_table_ to make it consistent with _db_reference.ref_table_.
 Only INSERT/UPDATE/DELETE statements are generated; there will be no ALTERs,
 as _dbdpp_ only work for tables with matching structure (the same set of fields and primary keys).
+Each table must therefore define a primary key.
 
 There are two modes of operation:
 * if both **source.cnf** and **target.cnf** are given (even if they are the same),
